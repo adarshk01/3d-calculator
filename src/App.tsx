@@ -5,16 +5,12 @@ import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 
 function App() {
   return (
-    <div className=" h-screen  bg-black ">
+    <div className=" h-screen  bg-black  ">
       <Canvas>
-        <PerspectiveCamera
-          makeDefault
-          position={[-2, 0, -10]}
-          rotation={[0, 0, 0]}
-        />
-        {/* <pointLight position={[0, 4, -5]} intensity={675} color="#FF637EFF" /> */}
+        <PerspectiveCamera makeDefault position={[-5, 0, -8.5]} />
         <OrbitControls />
         <Scene />
+        {/*Lights*/}
         <ambientLight intensity={0.25} color={"#252525"} />
         <pointLight castShadow intensity={200} position={[3, 7, -1]} />
         <pointLight
@@ -37,7 +33,7 @@ function App() {
           color={"#2ECBFF"}
           // color={"#68CBFD"}
         />{" "}
-        <pointLight intensity={325} position={[6.6, 0, -19]} />
+        <pointLight intensity={325} position={[4, 0, -15]} />
       </Canvas>
     </div>
   );
