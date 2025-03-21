@@ -9,6 +9,8 @@ type GLTFResult = GLTF & {
   materials: { [key: string]: THREE.Material };
 };
 
+const operator = ["+", "-", "*", "/", "%"];
+
 export function Scene(props: any) {
   const group = useRef(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -17,20 +19,105 @@ export function Scene(props: any) {
   ) as unknown as GLTFResult;
 
   const { actions } = useAnimations(animations, group);
-  const [numPlacement, setNumPlacement] = useState(-2.8);
+
   const [clicked, setClicked] = useState("");
   const [trigger, setTrigger] = useState(false);
   const [currDigtrigger, setCurrDigTrigger] = useState(false);
   const [currDig, setCurrDig] = useState<string>();
   const [currNum, setCurrNum] = useState<string[]>([]);
-  const [screen, setScreen] = useState(false);
-  useEffect(() => {
-    setScreen(true);
-  }, [currDigtrigger]);
+
+  const [firstNum, setFirstNum] = useState<number>();
+  const [secNum, setSecNum] = useState<number>();
+  const [operation, setOperation] = useState("");
+  const [performOp, setPerformOp] = useState(false);
+  const [isFloatOn, setIsFloatOn] = useState(false);
+  const [eqlPressed, setEqlPressed] = useState(false);
+  const [ans, setAns] = useState<number | string>();
+
+  function add(a: number, b: number) {
+    return a + b;
+  }
+
+  function sub(a: number, b: number) {
+    return a - b;
+  }
+
+  function mul(a: number, b: number) {
+    return a * b;
+  }
+
+  function div(a: number, b: number) {
+    return b == 0 ? "Error" : a / b;
+  }
+
+  function percent(a: number) {
+    return a / 100;
+  }
+
+  useEffect(
+    function () {
+      if (eqlPressed && currNum.length > 0) {
+        const numStr = currNum.join("");
+
+        const newNum = parseInt(numStr, 10);
+
+        setSecNum(newNum);
+      }
+    },
+    [eqlPressed]
+  );
+
+  function oneSetter(valve: number) {
+    let strValue = valve.toString();
+    if (valve === 0) {
+      strValue = "0";
+    }
+    if (strValue.includes("1")) {
+      strValue = strValue.replace(/1/g, " 1");
+    }
+    setAns(strValue);
+  }
 
   useEffect(() => {
-    setNumPlacement(numPlacement + 0.5);
-  }, [currDigtrigger]);
+    if ((secNum == 0 || secNum) && (firstNum == 0 || firstNum)) {
+      if (operation == operator[0]) {
+        const value = add(firstNum, secNum);
+        oneSetter(value);
+      } else if (operation == operator[1]) {
+        const value = sub(firstNum, secNum);
+        oneSetter(value);
+      } else if (operation == operator[2]) {
+        const value = mul(firstNum, secNum);
+        oneSetter(value);
+      } else if (operation == operator[3]) {
+        const value = div(firstNum, secNum);
+
+        if (value == "Error") {
+          console.log("we deep down here");
+          setAns("1423");
+        } else {
+          oneSetter(value);
+        }
+      } else if (operation == operator[4]) {
+        const value = percent(firstNum);
+        oneSetter(value);
+      }
+    }
+  }, [secNum, eqlPressed]);
+
+  useEffect(
+    function () {
+      if (performOp) {
+        const numStr = currNum.join("");
+
+        const newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
+        console.log("first number:", newNum);
+        setFirstNum(newNum);
+        setPerformOp(false);
+      }
+    },
+    [performOp]
+  );
 
   useEffect(() => {
     if (clicked && actions && actions[keys[clicked]]) {
@@ -64,14 +151,6 @@ export function Scene(props: any) {
       }
     }
   };
-
-  function add(a: number, b: number) {
-    return a + b;
-  }
-
-  function sub(a: number, b: number) {
-    return a - b;
-  }
 
   return (
     <group ref={group} {...props} dispose={null}>
@@ -109,6 +188,11 @@ export function Scene(props: any) {
             setClicked("CBtn");
             setCurrNum([]);
             setCurrDig("");
+            setOperation("");
+            setIsFloatOn(false);
+            setPerformOp(false);
+            setEqlPressed(false);
+            setAns("");
           }}
           name="CBtn"
           castShadow
@@ -156,7 +240,11 @@ export function Scene(props: any) {
         >
           {" "}
           <Text3D font="./Digital-7_Regular.json">
-            {parseInt(currNum.join(""), 10)}
+            {currNum.length > 9
+              ? "OverLimit"
+              : secNum && eqlPressed && currNum.length <= 9
+              ? ans
+              : currNum.join("")}
             <meshBasicMaterial
               color={"#1b1b1a"}
               transparent={currDig ? false : true}
@@ -174,6 +262,14 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("percentBtn");
+
+            if (currDig) {
+              setOperation("%");
+              setPerformOp(true);
+              setTimeout(() => {
+                setCurrNum([]);
+              }, 1);
+            }
           }}
           name="percentBtn"
           castShadow
@@ -182,7 +278,18 @@ export function Scene(props: any) {
           material={materials["keys.001"]}
           position={[0, 1, -0.143]}
           rotation={[Math.PI / 2, 0, 0]}
-        />
+        >
+          {" "}
+          {currDig && operation == operator[4] ? (
+            <meshStandardMaterial
+              attach="material"
+              color="#A3E635" // Change this to any color
+              map={(materials["keys.001"] as THREE.MeshStandardMaterial).map}
+              roughness={0.1} // Lower values make the material more reflective (0 is perfectly smooth, 1 is matte)
+              // Keep the texture
+            />
+          ) : null}
+        </mesh>
         <mesh
           onPointerOver={() => {
             document.body.style.cursor = "pointer";
@@ -193,6 +300,14 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("divBtn");
+
+            if (currDig) {
+              setOperation("/");
+              setPerformOp(true);
+              setTimeout(() => {
+                setCurrNum([]);
+              }, 1);
+            }
           }}
           name="divBtn"
           castShadow
@@ -201,7 +316,17 @@ export function Scene(props: any) {
           material={materials["keys.001"]}
           position={[-1, 1, -0.143]}
           rotation={[Math.PI / 2, 0, 0]}
-        />
+        >
+          {currDig && operation == operator[3] ? (
+            <meshStandardMaterial
+              attach="material"
+              color="#A3E635" // Change this to any color
+              map={(materials["keys.001"] as THREE.MeshStandardMaterial).map}
+              roughness={0.1} // Lower values make the material more reflective (0 is perfectly smooth, 1 is matte)
+              // Keep the texture
+            />
+          ) : null}
+        </mesh>
         <mesh
           // addEventListener("mouseenter", () => {
           //   document.body.style.cursor = "pointer";
@@ -215,6 +340,14 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("mulBtn");
+
+            if (currDig) {
+              setOperation("*");
+              setPerformOp(true);
+              setTimeout(() => {
+                setCurrNum([]);
+              }, 1);
+            }
           }}
           name="mulBtn"
           castShadow
@@ -223,7 +356,17 @@ export function Scene(props: any) {
           material={materials["keys.001"]}
           position={[-2, 1, -0.143]}
           rotation={[Math.PI / 2, 0, 0]}
-        />
+        >
+          {currDig && operation == operator[2] ? (
+            <meshStandardMaterial
+              attach="material"
+              color="#A3E635" // Change this to any color
+              map={(materials["keys.001"] as THREE.MeshStandardMaterial).map}
+              roughness={0.1} // Lower values make the material more reflective (0 is perfectly smooth, 1 is matte)
+              // Keep the texture
+            />
+          ) : null}
+        </mesh>
         <mesh
           onPointerOver={() => {
             document.body.style.cursor = "pointer";
@@ -297,6 +440,17 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("subBtn");
+            // setOperation("-");
+            // setPerformOp(true);
+            // setCurrNum([]);
+            // setCurrDig("");
+            if (currDig) {
+              setOperation("-");
+              setPerformOp(true);
+              setTimeout(() => {
+                setCurrNum([]);
+              }, 1);
+            }
           }}
           name="subBtn"
           castShadow
@@ -305,7 +459,18 @@ export function Scene(props: any) {
           material={materials.keys}
           position={[-2, 0, -0.143]}
           rotation={[Math.PI / 2, 0, 0]}
-        />
+        >
+          {" "}
+          {currDig && operation == operator[1] ? (
+            <meshStandardMaterial
+              attach="material"
+              color="#A3E635" // Change this to any color
+              map={(materials["keys"] as THREE.MeshStandardMaterial).map}
+              roughness={0.1} // Lower values make the material more reflective (0 is perfectly smooth, 1 is matte)
+              // Keep the texture
+            />
+          ) : null}
+        </mesh>
         <mesh
           onPointerOver={() => {
             document.body.style.cursor = "pointer";
@@ -379,6 +544,13 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("addBtn");
+            if (currDig) {
+              setOperation("+");
+              setPerformOp(true);
+              setTimeout(() => {
+                setCurrNum([]);
+              }, 1);
+            }
           }}
           name="addBtn"
           castShadow
@@ -387,7 +559,18 @@ export function Scene(props: any) {
           material={materials["keys.002"]}
           position={[-2, -1, -0.143]}
           rotation={[Math.PI / 2, 0, 0]}
-        />
+        >
+          {" "}
+          {currDig && operation == operator[0] ? (
+            <meshStandardMaterial
+              attach="material"
+              color="#ace849" // Change this to any color
+              map={(materials["keys.002"] as THREE.MeshStandardMaterial).map}
+              roughness={0.1} // Lower values make the material more reflective (0 is perfectly smooth, 1 is matte)
+              // Keep the texture
+            />
+          ) : null}
+        </mesh>
         <mesh
           onPointerOver={() => {
             document.body.style.cursor = "pointer";
@@ -400,7 +583,7 @@ export function Scene(props: any) {
             setTrigger(!trigger);
             setCurrDigTrigger(!currDigtrigger);
             setClicked("btn1");
-            setCurrDig("1");
+            setCurrDig(" 1");
           }}
           castShadow
           receiveShadow
@@ -440,6 +623,7 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setCurrDigTrigger(!currDigtrigger);
+
             setClicked("btn3");
             setCurrDig("3");
           }}
@@ -461,6 +645,9 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("eqlBtn");
+            if (firstNum && currNum.length > 0) {
+              setEqlPressed(true);
+            }
           }}
           name="eqlBtn"
           castShadow
@@ -503,6 +690,10 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("ptBtn");
+            if (!isFloatOn) {
+              setCurrDig(".");
+              setIsFloatOn(true);
+            }
           }}
           name="ptBtn"
           castShadow
