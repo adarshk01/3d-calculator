@@ -25,7 +25,7 @@ export function Scene(props: any) {
   const [currDigtrigger, setCurrDigTrigger] = useState(false);
   const [currDig, setCurrDig] = useState<string>();
   const [currNum, setCurrNum] = useState<string[]>([]);
-
+  const [eqlCounter, setEqlCounter] = useState(0);
   const [firstNum, setFirstNum] = useState<number>();
   const [secNum, setSecNum] = useState<number>();
   const [operation, setOperation] = useState("");
@@ -79,6 +79,33 @@ export function Scene(props: any) {
   }
 
   useEffect(() => {
+    if (eqlCounter > 0 && firstNum && secNum) {
+      if (operation == operator[0]) {
+        const value = add(firstNum, secNum);
+        oneSetter(value);
+      } else if (operation == operator[1]) {
+        const value = sub(firstNum, secNum);
+        oneSetter(value);
+      } else if (operation == operator[2]) {
+        const value = mul(firstNum, secNum);
+
+        oneSetter(value);
+      } else if (operation == operator[3]) {
+        const value = div(firstNum, secNum);
+
+        if (value == "Error") {
+          setAns(value);
+        } else {
+          oneSetter(value);
+        }
+      } else if (operation == operator[4]) {
+        const value = percent(firstNum);
+        oneSetter(value);
+      }
+    }
+  }, [eqlCounter]);
+
+  useEffect(() => {
     if ((secNum == 0 || secNum) && (firstNum == 0 || firstNum)) {
       if (operation == operator[0]) {
         const value = add(firstNum, secNum);
@@ -88,13 +115,13 @@ export function Scene(props: any) {
         oneSetter(value);
       } else if (operation == operator[2]) {
         const value = mul(firstNum, secNum);
+
         oneSetter(value);
       } else if (operation == operator[3]) {
         const value = div(firstNum, secNum);
 
         if (value == "Error") {
-          console.log("we deep down here");
-          setAns("1423");
+          setAns(value);
         } else {
           oneSetter(value);
         }
@@ -111,9 +138,9 @@ export function Scene(props: any) {
         const numStr = currNum.join("");
 
         const newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
-        console.log("first number:", newNum);
+
         setFirstNum(newNum);
-        setPerformOp(false);
+        // setPerformOp(false);
       }
     },
     [performOp]
@@ -193,6 +220,7 @@ export function Scene(props: any) {
             setPerformOp(false);
             setEqlPressed(false);
             setAns("");
+            setEqlCounter(0);
           }}
           name="CBtn"
           castShadow
@@ -242,7 +270,10 @@ export function Scene(props: any) {
           <Text3D font="./Digital-7_Regular.json">
             {currNum.length > 9
               ? "OverLimit"
-              : secNum && eqlPressed && currNum.length <= 9
+              : (secNum || secNum == 0) &&
+                (firstNum || firstNum == 0) &&
+                eqlPressed &&
+                currNum.length <= 9
               ? ans
               : currNum.join("")}
             <meshBasicMaterial
@@ -645,8 +676,14 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("eqlBtn");
-            if (firstNum && currNum.length > 0) {
+            if ((firstNum || firstNum == 0) && currNum.length > 0) {
               setEqlPressed(true);
+              setEqlCounter(eqlCounter + 1);
+            }
+            if (eqlPressed && eqlCounter > 0) {
+              setTimeout(() => {
+                setFirstNum(ans as number);
+              }, 1);
             }
           }}
           name="eqlBtn"
