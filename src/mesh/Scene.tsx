@@ -50,16 +50,21 @@ export function Scene(props: any) {
     return b == 0 ? "Error" : a / b;
   }
 
-  function percent(a: number) {
-    return a / 100;
+  function percent(a: number, b: number) {
+    return (a / 100) * b;
   }
 
   useEffect(
     function () {
       if (eqlPressed && currNum.length > 0) {
         const numStr = currNum.join("");
-
-        const newNum = parseInt(numStr, 10);
+        let newNum = 0;
+        if (isFloatOn) {
+          newNum = parseFloat(numStr.replace(/\s+/g, ""));
+        } else {
+          newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
+        }
+        // const newNum = parseInt(numStr, 10);
 
         setSecNum(newNum);
       }
@@ -99,7 +104,7 @@ export function Scene(props: any) {
           oneSetter(value);
         }
       } else if (operation == operator[4]) {
-        const value = percent(firstNum);
+        const value = percent(firstNum, secNum);
         oneSetter(value);
       }
     }
@@ -126,7 +131,7 @@ export function Scene(props: any) {
           oneSetter(value);
         }
       } else if (operation == operator[4]) {
-        const value = percent(firstNum);
+        const value = percent(firstNum, secNum);
         oneSetter(value);
       }
     }
@@ -136,11 +141,15 @@ export function Scene(props: any) {
     function () {
       if (performOp) {
         const numStr = currNum.join("");
-
-        const newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
-
+        let newNum = 0;
+        if (isFloatOn) {
+          newNum = parseFloat(numStr.replace(/\s+/g, ""));
+        } else {
+          newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
+        }
         setFirstNum(newNum);
         // setPerformOp(false);
+        setIsFloatOn(false);
       }
     },
     [performOp]
