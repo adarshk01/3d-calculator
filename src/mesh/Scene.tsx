@@ -12,6 +12,13 @@ type GLTFResult = GLTF & {
 const operator = ["+", "-", "*", "/", "%"];
 
 export function Scene(props: any) {
+  // const { position, rotationX, rotationY, rotationZ } = useControls({
+  //   position: { value: [10, 0, 10], step: 0.1 },
+  //   rotationX: { value: 1.6, min: 0, max: Math.PI * 2, step: 0.01 },
+  //   rotationY: { value: 0, min: 0, max: Math.PI * 2, step: 0.01 },
+  //   rotationZ: { value: 3, min: 0, max: Math.PI * 2, step: 0.01 },
+  // });
+
   const group = useRef(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { nodes, materials, animations } = useGLTF(
@@ -51,7 +58,7 @@ export function Scene(props: any) {
   }
 
   function percent(a: number, b: number) {
-    return (a / 100) * b;
+    return (a / b) * 100;
   }
 
   useEffect(
@@ -755,8 +762,10 @@ export function Scene(props: any) {
           receiveShadow
           geometry={nodes.Plane023.geometry}
           material={materials.back}
-          position={[-0.053, 0.764, 13.147]}
-          rotation={[Math.PI / 2, 0, Math.PI]}
+          // position={[5, 0.764, 10.147]}
+          position={[10, 0, 10]}
+          // rotation={[Math.PI / 2, 0, -Math.PI / 10]}
+          rotation={[1.6, 0, 3]}
         />
       </group>
     </group>
