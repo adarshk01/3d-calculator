@@ -2,7 +2,7 @@ import { Canvas } from "@react-three/fiber";
 
 import "./App.css";
 import { Scene } from "./mesh/Scene";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { PerspectiveCamera } from "@react-three/drei";
 import { useEffect, useState } from "react";
 
 function App() {
@@ -42,12 +42,11 @@ function App() {
         {/* <ResizeHandler /> */}
         <PerspectiveCamera
           makeDefault
-          // position={[0, 0, -8.5]}
           position={[cameraAngle, 1, -2.9]}
-          // rotation={[0, 1, 0]}
+          onUpdate={(self) => self.lookAt(0, 0, 0)}
           aspect={aspect}
         />
-        <OrbitControls />
+        {/* <OrbitControls /> */}
         <Scene />
         {/*Lights*/}
         <ambientLight intensity={0.25} color={"#252525"} />
