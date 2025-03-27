@@ -84,6 +84,8 @@ export function Scene(props: any) {
     if (valve === 0) {
       strValue = "0";
     }
+    // Remove any existing spaces and add them back properly
+    strValue = strValue.replace(/\s+/g, "");
     if (strValue.includes("1")) {
       strValue = strValue.replace(/1/g, " 1");
     }
@@ -309,13 +311,21 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("percentBtn");
-
-            if (currDig) {
+            if (currDig || eqlPressed) {
               setOperation("%");
               setPerformOp(true);
-              setTimeout(() => {
+              if (eqlPressed) {
+                // If we're starting a new operation after equals, use the previous answer
+                const prevAnsStr = (ans as string).replace(/\s+/g, "");
+                const prevAns = parseFloat(prevAnsStr);
+                setFirstNum(prevAns);
                 setCurrNum([]);
-              }, 1);
+                setEqlPressed(false);
+              } else {
+                setTimeout(() => {
+                  setCurrNum([]);
+                }, 1);
+              }
             }
           }}
           name="percentBtn"
@@ -347,13 +357,21 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("divBtn");
-
-            if (currDig) {
+            if (currDig || eqlPressed) {
               setOperation("/");
               setPerformOp(true);
-              setTimeout(() => {
+              if (eqlPressed) {
+                // If we're starting a new operation after equals, use the previous answer
+                const prevAnsStr = (ans as string).replace(/\s+/g, "");
+                const prevAns = parseFloat(prevAnsStr);
+                setFirstNum(prevAns);
                 setCurrNum([]);
-              }, 1);
+                setEqlPressed(false);
+              } else {
+                setTimeout(() => {
+                  setCurrNum([]);
+                }, 1);
+              }
             }
           }}
           name="divBtn"
@@ -387,13 +405,21 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("mulBtn");
-
-            if (currDig) {
+            if (currDig || eqlPressed) {
               setOperation("*");
               setPerformOp(true);
-              setTimeout(() => {
+              if (eqlPressed) {
+                // If we're starting a new operation after equals, use the previous answer
+                const prevAnsStr = (ans as string).replace(/\s+/g, "");
+                const prevAns = parseFloat(prevAnsStr);
+                setFirstNum(prevAns);
                 setCurrNum([]);
-              }, 1);
+                setEqlPressed(false);
+              } else {
+                setTimeout(() => {
+                  setCurrNum([]);
+                }, 1);
+              }
             }
           }}
           name="mulBtn"
@@ -487,16 +513,21 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("subBtn");
-            // setOperation("-");
-            // setPerformOp(true);
-            // setCurrNum([]);
-            // setCurrDig("");
-            if (currDig) {
+            if (currDig || eqlPressed) {
               setOperation("-");
               setPerformOp(true);
-              setTimeout(() => {
+              if (eqlPressed) {
+                // If we're starting a new operation after equals, use the previous answer
+                const prevAnsStr = (ans as string).replace(/\s+/g, "");
+                const prevAns = parseFloat(prevAnsStr);
+                setFirstNum(prevAns);
                 setCurrNum([]);
-              }, 1);
+                setEqlPressed(false);
+              } else {
+                setTimeout(() => {
+                  setCurrNum([]);
+                }, 1);
+              }
             }
           }}
           name="subBtn"
@@ -591,12 +622,21 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("addBtn");
-            if (currDig) {
+            if (currDig || eqlPressed) {
               setOperation("+");
               setPerformOp(true);
-              setTimeout(() => {
+              if (eqlPressed) {
+                // If we're starting a new operation after equals, use the previous answer
+                const prevAnsStr = (ans as string).replace(/\s+/g, "");
+                const prevAns = parseFloat(prevAnsStr);
+                setFirstNum(prevAns);
                 setCurrNum([]);
-              }, 1);
+                setEqlPressed(false);
+              } else {
+                setTimeout(() => {
+                  setCurrNum([]);
+                }, 1);
+              }
             }
           }}
           name="addBtn"
@@ -697,9 +737,13 @@ export function Scene(props: any) {
               setEqlCounter(eqlCounter + 1);
             }
             if (eqlPressed && eqlCounter > 0) {
-              setTimeout(() => {
-                setFirstNum(ans as number);
-              }, 1);
+              // Remove spaces and convert to number properly
+              const prevAnsStr = (ans as string).replace(/\s+/g, "");
+              const prevAns = parseFloat(prevAnsStr);
+              setFirstNum(prevAns);
+              setSecNum(secNum);
+              setCurrNum([]);
+              setEqlCounter(eqlCounter + 1);
             }
           }}
           name="eqlBtn"
