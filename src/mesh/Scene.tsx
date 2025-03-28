@@ -40,6 +40,7 @@ export function Scene(props: any) {
   const [isFloatOn, setIsFloatOn] = useState(false);
   const [eqlPressed, setEqlPressed] = useState(false);
   const [ans, setAns] = useState<number | string>();
+  const [isNewCalculation, setIsNewCalculation] = useState(true);
 
   function add(a: number, b: number) {
     return a + b;
@@ -71,80 +72,46 @@ export function Scene(props: any) {
         } else {
           newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
         }
-        // const newNum = parseInt(numStr, 10);
-
         setSecNum(newNum);
       }
     },
     [eqlPressed]
   );
 
-  function oneSetter(valve: number) {
-    let strValue = valve.toString();
-    if (valve === 0) {
-      strValue = "0";
-    }
-    // Remove any existing spaces and add them back properly
-    strValue = strValue.replace(/\s+/g, "");
-    if (strValue.includes("1")) {
-      strValue = strValue.replace(/1/g, " 1");
-    }
-    setAns(strValue);
-  }
-
   useEffect(() => {
-    if (eqlCounter > 0 && firstNum && secNum) {
-      if (operation == operator[0]) {
-        const value = add(firstNum, secNum);
-        oneSetter(value);
-      } else if (operation == operator[1]) {
-        const value = sub(firstNum, secNum);
-        oneSetter(value);
-      } else if (operation == operator[2]) {
-        const value = mul(firstNum, secNum);
+    if (
+      eqlCounter > 0 &&
+      firstNum !== undefined &&
+      secNum !== undefined &&
+      operation
+    ) {
+      let result: number | string;
+      if (operation === operator[0]) {
+        result = add(firstNum, secNum);
+      } else if (operation === operator[1]) {
+        result = sub(firstNum, secNum);
+      } else if (operation === operator[2]) {
+        result = mul(firstNum, secNum);
+      } else if (operation === operator[3]) {
+        result = div(firstNum, secNum);
+      } else if (operation === operator[4]) {
+        result = percent(firstNum, secNum);
+      } else {
+        return;
+      }
 
-        oneSetter(value);
-      } else if (operation == operator[3]) {
-        const value = div(firstNum, secNum);
+      if (result === "Error") {
+        setAns(result);
+      } else {
+        oneSetter(result as number);
+      }
 
-        if (value == "Error") {
-          setAns(value);
-        } else {
-          oneSetter(value);
-        }
-      } else if (operation == operator[4]) {
-        const value = percent(firstNum, secNum);
-        oneSetter(value);
+      // Set the result as the new first number for chaining
+      if (result !== "Error" && result !== "OverLimit") {
+        setFirstNum(result as number);
       }
     }
   }, [eqlCounter]);
-
-  useEffect(() => {
-    if ((secNum == 0 || secNum) && (firstNum == 0 || firstNum)) {
-      if (operation == operator[0]) {
-        const value = add(firstNum, secNum);
-        oneSetter(value);
-      } else if (operation == operator[1]) {
-        const value = sub(firstNum, secNum);
-        oneSetter(value);
-      } else if (operation == operator[2]) {
-        const value = mul(firstNum, secNum);
-
-        oneSetter(value);
-      } else if (operation == operator[3]) {
-        const value = div(firstNum, secNum);
-
-        if (value == "Error") {
-          setAns(value);
-        } else {
-          oneSetter(value);
-        }
-      } else if (operation == operator[4]) {
-        const value = percent(firstNum, secNum);
-        oneSetter(value);
-      }
-    }
-  }, [secNum, eqlPressed]);
 
   useEffect(
     function () {
@@ -180,7 +147,14 @@ export function Scene(props: any) {
 
   useEffect(() => {
     if (currDig) {
-      setCurrNum((prev) => [...prev, currDig]);
+      // Check if adding this digit would exceed 9 characters in the whole number part
+      const newNum = [...currNum, currDig].join("");
+      const wholeNumberPart = newNum.split(".")[0].replace(/\s+/g, "");
+      if (wholeNumberPart.length > 9) {
+        setCurrNum(["OverLimit"]);
+      } else {
+        setCurrNum((prev) => [...prev, currDig]);
+      }
     }
   }, [currDig, currDigtrigger]);
 
@@ -196,6 +170,25 @@ export function Scene(props: any) {
       }
     }
   };
+
+  function oneSetter(valve: number) {
+    let strValue = valve.toString();
+    if (valve === 0) {
+      strValue = "0";
+    }
+    // Remove any existing spaces and add them back properly
+    strValue = strValue.replace(/\s+/g, "");
+    if (strValue.includes("1")) {
+      strValue = strValue.replace(/1/g, " 1");
+    }
+    // Check total length including decimal part
+    const totalLength = strValue.replace(/\s+/g, "").length;
+    if (totalLength > 9) {
+      setAns("OverLimit");
+    } else {
+      setAns(strValue);
+    }
+  }
 
   return (
     <group ref={group} {...props} dispose={null}>
@@ -239,6 +232,7 @@ export function Scene(props: any) {
             setEqlPressed(false);
             setAns("");
             setEqlCounter(0);
+            setIsNewCalculation(true);
           }}
           name="CBtn"
           castShadow
@@ -286,14 +280,27 @@ export function Scene(props: any) {
         >
           {" "}
           <Text3D font="./Digital-7_Regular.json">
-            {currNum.length > 9
-              ? "OverLimit"
-              : (secNum || secNum == 0) &&
-                (firstNum || firstNum == 0) &&
+            {(() => {
+              const displayText =
+                (secNum || secNum === 0) &&
+                (firstNum || firstNum === 0) &&
                 eqlPressed &&
-                currNum.length <= 9
-              ? ans
-              : currNum.join("")}
+                operation
+                  ? ans
+                  : currNum.join("");
+
+              if (!displayText) return "";
+
+              // Check total length including decimal part
+              const totalLength = displayText
+                .toString()
+                .replace(/\s+/g, "").length;
+              if (totalLength > 9) {
+                return "OverLimit";
+              }
+
+              return displayText;
+            })()}
             <meshBasicMaterial
               color={"#1b1b1a"}
               transparent={currDig ? false : true}
@@ -732,17 +739,23 @@ export function Scene(props: any) {
           onClick={() => {
             setTrigger(!trigger);
             setClicked("eqlBtn");
-            if ((firstNum || firstNum == 0) && currNum.length > 0) {
+            if (currNum.length > 0) {
+              const numStr = currNum.join("");
+              let newNum = 0;
+              if (isFloatOn) {
+                newNum = parseFloat(numStr.replace(/\s+/g, ""));
+              } else {
+                newNum = parseInt(numStr.replace(/\s+/g, ""), 10);
+              }
+              setSecNum(newNum);
               setEqlPressed(true);
-              setEqlCounter(eqlCounter + 1);
-            }
-            if (eqlPressed && eqlCounter > 0) {
-              // Remove spaces and convert to number properly
+              if ((firstNum || firstNum === 0) && operation) {
+                setEqlCounter(eqlCounter + 1);
+              }
+            } else if ((ans || ans === 0) && operation) {
               const prevAnsStr = (ans as string).replace(/\s+/g, "");
               const prevAns = parseFloat(prevAnsStr);
               setFirstNum(prevAns);
-              setSecNum(secNum);
-              setCurrNum([]);
               setEqlCounter(eqlCounter + 1);
             }
           }}
