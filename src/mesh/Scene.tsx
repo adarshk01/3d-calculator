@@ -40,7 +40,7 @@ export function Scene(props: any) {
   const [isFloatOn, setIsFloatOn] = useState(false);
   const [eqlPressed, setEqlPressed] = useState(false);
   const [ans, setAns] = useState<number | string>();
-  const [isNewCalculation, setIsNewCalculation] = useState(true);
+  // const [isNewCalculation, setIsNewCalculation] = useState(true);
 
   function add(a: number, b: number) {
     return a + b;
@@ -232,7 +232,7 @@ export function Scene(props: any) {
             setEqlPressed(false);
             setAns("");
             setEqlCounter(0);
-            setIsNewCalculation(true);
+            // setIsNewCalculation(true);
           }}
           name="CBtn"
           castShadow

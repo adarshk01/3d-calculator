@@ -37,7 +37,7 @@ function App() {
   }, [aspect]);
 
   return (
-    <div className=" h-screen  bg-black  ">
+    <div className=" h-screen min-h-fit bg-black  ">
       <Canvas>
         {/* <ResizeHandler /> */}
         <PerspectiveCamera
